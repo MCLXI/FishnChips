@@ -1,0 +1,100 @@
+{
+    "lang": "javascript",
+    "version": "1.0.0",
+    "abi": [
+        {
+            "name": "ambassadorBuyIn",
+            "args": [
+                "string",
+                "string"
+            ],
+                                                                             "amountLimit": [ {
+  "token": "iost",
+  "val": "unlimited"
+  } ],
+
+            "description": ""
+        },
+        {
+            "name": "claimAirdrops",
+            "args": [
+                "string",
+                "string"
+            ],
+            "amountLimit": [],
+            "description": ""
+        },
+        {
+            "name": "chipstofish",
+            "args": [
+                "string",
+                "string"
+            ],
+            "amountLimit": [],
+            "description": ""
+        },
+        {
+            "name": "sell",
+            "args": [
+                "string",
+                "string"
+            ],
+            "amountLimit": [],
+            "description": ""
+        },
+        {
+            "name": "claimchipdivs",
+            "args": [
+                "string"
+            ],
+            "amountLimit": [],
+            "description": ""
+        },
+        {
+            "name": "nodeUnvote",
+            "args": [
+                "string",
+                "string"
+            ],
+            "amountLimit": [],
+            "description": ""
+        },
+        {
+            "name": "nodeVote",
+            "args": [
+                "string",
+                "string"
+            ],
+            "amountLimit": [],
+            "description": ""
+        },
+        {
+            "name": "voterrewards",
+            "args": [],
+            "amountLimit": [],
+            "description": ""
+        },
+        {
+            "name": "claimfishdivs",
+            "args": [
+                "string"
+            ],
+            "amountLimit": [],
+            "description": ""
+        },
+        {
+            "name": "buyin",
+            "args": [
+                "string",
+                "string",
+                "string"
+            ],
+                                                                              "amountLimit": [ {
+  "token": "iost",
+  "val": "unlimited"
+  } ],
+
+            "description": ""
+        }
+    ]
+}
