@@ -1,13 +1,24 @@
 class FishnChips {
     init() {
+      //the price of the token
         storage.put('tokenPrice', '1');
+      //divs are calculated in profitPerShare, similar to the original PoWH3D Design.
         storage.put('profitPerShare', '0');
+      //A simple counter to keep track of the IOST in the contract. Only used as reference.
         storage.put('iost_in_contract', '0')
+      //The current supply of CHIPS
         storage.put('chipsCurrSupply', '0')
+      //divs are calculated in profitPerShare, similar to the original PoWH3D Design.
         storage.put('profitPerShare_fish', '0');
+      //The current supply of FISH
         storage.put('fishCurrSupply', '0')
+    //How many tokens are voted onto the node.
         storage.put('voted', '0')
     }
+  /**
+   * Allows MC or Justin to withdraw any airdrops for IOST voters such as LOL, etc.
+   * IOST cannot be withdrawn from the contract using this command.
+   */
     claimAirdrops(token,amount){
       if(token == "iost"){
         throw 'iost cannot be withdrawn.'
@@ -26,6 +37,9 @@ class FishnChips {
           throw 'no permissions'
         }
     }
+    /**
+     * Ambassadors use this function to buy in at any time before the December 1st launch.
+     */
     ambassadorBuyIn(account, amount) {
       if (!blockchain.requireAuth(account, 'active')) {
           throw 'no permission!';
@@ -68,11 +82,19 @@ class FishnChips {
         ]);
         storage.put('voted',new Float64(storage.get('voted')).plus(new Float64(amount)).toFixed(8).toString())
     }
+    /**
+     * Grabs the token balance of the contract.
+     */
     _getTokenBalance(token) {
         const tokenBalArgs = [token, blockchain.contractName()];
         return blockchain.call("token.iost", "balanceOf", JSON.stringify(tokenBalArgs));
     }
-
+    /**
+     * Function to convert CHIPS to FISH. FISH cannot be sold.
+     * The number of CHIPS you own is actually account+'_chips' - account+'_fish'
+     * FISH works as a negative counter.
+     * Why? Because you still need to claim the equivalent amount of CHIPS Divs.
+     */
     chipstofish(account, amount) {
         if (!blockchain.requireAuth(account, 'active')) {
             throw 'no permission!';
@@ -101,6 +123,9 @@ class FishnChips {
         }
         storage.put('fishCurrSupply', new Float64(storage.get('fishCurrSupply')).plus(new Float64(amount)).toFixed(8).toString())
     }
+    /**
+     * Function to liquidate CHIPS for IOST.
+     */
     sell(account, amount) {
         if (!blockchain.requireAuth(account, 'active')) {
             throw 'no permission!';
@@ -176,6 +201,10 @@ class FishnChips {
         ]);
 
     }
+
+    /**
+     * Reduce the IOST balance counter. For reference only.
+     */
     _reduceIOSTCounter(amount) {
         let iost_in_contract = storage.get('iost_in_contract');
         let update = new Float64(iost_in_contract).minus(new Float64(amount)).toFixed(8).toString()
@@ -185,6 +214,10 @@ class FishnChips {
             update: update
         }));
     }
+
+    /**
+     * Buyback function called only by the contract when it has to reinvest voter rewards or the 1% on sell.
+     */
     _buyBack(amount) {
         //50% Buyback and Burn + 50% Buyback and Distribute for FISH holders
         if (!storage.has('profitPerShare_fish')) {
@@ -215,6 +248,12 @@ class FishnChips {
             burned_chips: burned
         }));
     }
+
+
+    /**
+     * Allows the user to claim their CHIPS divs in terms of
+     * (profitPerShare*account+'_chips') - account+'_claimed'
+     */
     claimchipdivs(account) {
         if (!blockchain.requireAuth(account, 'active')) {
             throw 'no permission!';
@@ -240,6 +279,9 @@ class FishnChips {
         storage.put(account + '_claimed', new Float64(claimed).plus(new Float64(divs)).toFixed(8).toString());
 
     }
+    /**
+     * Allows Justin or MC to unvote funds from the node starting on December 5th.
+     */
     nodeUnvote(node, amount) {
         //this command may not be called until december 5th
         let public_start_time = Number(1575583200); //december 5th 2:00pm PST
@@ -264,6 +306,10 @@ class FishnChips {
         }
 
     }
+    /**
+     * Allows Justin or MC to vote funds to the node starting on December 5th.
+     * Built in safety check to ensure the hourglass is at minimum 20% liquid at all times.
+     */
     nodeVote(node, amount) {
         //this command may not be called until december 5th
         let public_start_time = Number(1575583200); //december 5th 2:00pm PST
@@ -295,6 +341,10 @@ class FishnChips {
             throw 'no permission!';
         }
     }
+    /**
+     * Allows anyone to trigger contract to reinvest the voter rewards.
+     * Cannot be activated until Dec 5th.
+     */
     voterrewards() {
         //this command may not be called until december 5th. anyone may call this command.
         let public_start_time = Number(1575583200); //december 5th 2:00pm PST
@@ -315,6 +365,11 @@ class FishnChips {
         let amtbuyback = new Float64(newsnapshot).minus(new Float64(balancesnapshot)).toFixed(8).toString();
         this._buyBack(amtbuyback);
     }
+
+    /**
+     * Claim FISH dividends from the CHIPS that are bought back through function _buyBack()
+     * Similar design as CHIPS, uses (profitPerShare_fish*account+'_fish') - account+'_fishclaimed'
+     */
     claimfishdivs(account) {
         if (!blockchain.requireAuth(account, 'active')) {
             throw 'no permission!';
@@ -347,14 +402,18 @@ class FishnChips {
             new_contract_bal: new_contract_bal
         }));
     }
-
+    /**
+     * Allows the contract to withdraw voter rewards.
+     */
     _voterWithdraw(voter) {
         let contract = "vote_producer.iost";
         let api = "voterWithdraw";
         let args = [voter];
         this._call(contract, api, args);
     }
-
+    /**
+     * Another way to call functions.
+     */
     _call(contract, api, args) {
         const ret = blockchain.callWithAuth(contract, api, args);
         if (ret && Array.isArray(ret) && ret.length >= 1) {
@@ -362,6 +421,9 @@ class FishnChips {
         }
         return ret;
     }
+    /**
+     * Used to buy CHIPS and properly distribute dividends/fees.
+     */
     buyin(referral, account, amount) {
       if (!blockchain.requireAuth(account, 'active')) {
           throw 'no permission!';
@@ -409,6 +471,9 @@ class FishnChips {
         this._increasePrice(amount);
         return mychip;
     }
+    /**
+     * Used to increase the token price.
+     */
     _increasePrice(amount) {
         let inc = new Float64('0.0000001'); //.1 per million
         let price_increase = new Float64(amount).multi(new Float64(inc)).toFixed(8).toString();
@@ -421,6 +486,9 @@ class FishnChips {
             price_increase: price_increase
         }));
     }
+    /**
+     * Used to decrease the token price.
+     */
     _decreasePrice(amount) {
         let inc = new Float64('0.0000001'); //.1 per million
         let price_decrease = new Float64(amount).multi(new Float64(inc)).toFixed(8).toString();
@@ -433,6 +501,9 @@ class FishnChips {
             price_decrease: price_decrease
         }));
     }
+    /**
+     * Used to calculate how much profit per share increased to distribute dividends
+     */
     _payDividends(account, amount) {
         let profit_per_share = storage.get('profitPerShare');
         let chips_curr_supply = storage.get('chipsCurrSupply');
@@ -447,6 +518,9 @@ class FishnChips {
         }));
         return dividend_per_share;
     }
+    /**
+     * Used to add IOST to the contract balance counter. Reference only.
+     */
     _addIOSTCounter(amount) {
         let iost_in_contract = storage.get('iost_in_contract');
         let update = new Float64(iost_in_contract).plus(new Float64(amount)).toFixed(8).toString()
@@ -456,6 +530,9 @@ class FishnChips {
             update: update
         }));
     }
+    /**
+     * Used to send the FRY investment fund fee.
+     */
     _fryInvestmentFund(amount) {
         blockchain.callWithAuth('token.iost', 'transfer', [
             'iost',
@@ -465,6 +542,9 @@ class FishnChips {
             'Sent ' + amount + ' IOST for FRY Invest Fund.'
         ]);
     }
+    /**
+     * Used to send the development fee.
+     */
     _devFee(amount) {
         let dev_fee = new Float64(amount).multi(new Float64('0.5')).toFixed(8).toString(); //half to each person
         blockchain.callWithAuth('token.iost', 'transfer', [
@@ -482,6 +562,9 @@ class FishnChips {
             'Sent ' + dev_fee + ' IOST for Developers.'
         ]);
     }
+    /**
+     * Used to send the referral fee. On buyback the contract refers itself, and should land on the third (else) case.
+     */
     _referralFee(referral, amount, account) {
         if (account !== blockchain.contractName() && referral === account) { //if you refer yourself, it doesn't count
             //3 pct fee for referral
@@ -540,6 +623,9 @@ class FishnChips {
 
 
     }
+    /**
+     * Used to generate CHIPS through the buy function.
+     */
     _mintChips(account, amount, token_price, chips_curr_supply, ambassador, self_dividends) {
         if (!storage.has(account + '_chips')) {
             storage.put(account + '_chips', '0');
@@ -587,6 +673,10 @@ class FishnChips {
         }));
         return chips_to_receive;
     }
+    /**
+     * Quadratic solver to calculate slippage when buying tokens. Uses partial summations.
+     * If loops were possible on blockchain, you'd get the same answer.
+     */
     _solve(a, b, c) {
         //quadratic formula to solve summation
         let result = new Float64(new Float64(-1).multi(new Float64(b)).plus(new Float64(Math.sqrt(new Float64(Math.pow(b, 2)).minus(new Float64(4).multi(new Float64(a).multi(new Float64(c)))))))).div(new Float64(a).multi(new Float64(2)));
@@ -594,6 +684,9 @@ class FishnChips {
         // let result = (-1 * b + Math.sqrt(Math.pow(b, 2) - (4 * a * c))) / (2 * a);
         return result + 1; //need to add 1 for correct answer
     }
+    /**
+     * Calculate how many CHIPS to send.
+     */
     _calcChipsReceived(iostamount, token_price) {
         let have = iostamount;
         let inc = new Float64('0.0000001'); //.1 per million
@@ -604,6 +697,9 @@ class FishnChips {
         return x;
 
     }
+    /**
+     * Calculate how many IOST to send. Back-solves the quadratic equation to obtain the original IOST amount.
+     */
     _calcIOSTReceived(chips, price) {
         let inc = new Float64('0.0000001'); //.1 per million
         chips = new Float64(chips).minus(new Float64(1)); //subtract 1 from chips from 1 added in _solve()
