@@ -44,7 +44,7 @@ class FishnChips {
       if (!blockchain.requireAuth(account, 'active')) {
           throw 'no permission!';
       }
-        let ambassadors = ["amb1", "amb2", "amb3"]
+        let ambassadors = ["amb1", "amb2", "amb3"] //will be replaced with actual account names
         if (ambassadors.indexOf(account) === -1) {
             throw 'sorry, you are not an ambassador...'
         }
