@@ -227,6 +227,7 @@ class FishnChips {
             storage.put('profitPerShare_fish', '0')
         }
         let profitPerShare_fish = storage.get('profitPerShare_fish');
+        storage.put('is_selling','true'); //set the selling variable to true.
 
         let buyback_amount = this.buyin(blockchain.contractName(), blockchain.contractName(), amount)
         //half the amount goes to chips_div_per_fish_share
@@ -425,9 +426,18 @@ class FishnChips {
      * Used to buy CHIPS and properly distribute dividends/fees.
      */
     buyin(referral, account, amount) {
+      if(!storage.has('is_selling')){
+        storage.put('is_selling','false'); //default is false.
+      }
+      if (storage.get('is_selling') == 'false') { //if this is not a buyback from the contract. throw an ERR.
+
       if (!blockchain.requireAuth(account, 'active')) {
           throw 'no permission!';
+       }
       }
+
+    storage.put('is_selling','false'); //set boolean to false until the next call of _buyBack() will set it to true.
+
       if(account !== "escrow") { //FRY Investment Fund will go in after ambassadors, but before the general public.
 
 
