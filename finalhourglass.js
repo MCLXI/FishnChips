@@ -1,5 +1,7 @@
 class FishnChips {
     init() {
+      let amb = ["amb1","amb2","amb3"] //replaced with actual account names on LAUNCH
+      storage.put('ambassadors',JSON.stringify(amb));
       //the price of the token
         storage.put('tokenPrice', '1');
       //divs are calculated in profitPerShare, similar to the original PoWH3D Design.
@@ -41,10 +43,13 @@ class FishnChips {
      * Ambassadors use this function to buy in at any time before the December 1st launch.
      */
     ambassadorBuyIn(account, amount) {
-      if (!blockchain.requireAuth(account, 'active')) {
-          throw 'no permission!';
-      }
-        let ambassadors = ["amb1", "amb2", "amb3"] //will be replaced with actual account names
+      // if (!blockchain.requireAuth(account, 'active')) {
+      //     throw 'no permission!';
+      // }
+        if (account==blockchain.contractName()){
+          throw 'err';
+        }
+        let ambassadors = JSON.parse(storage.get('ambassadors'));
         if (ambassadors.indexOf(account) === -1) {
             throw 'sorry, you are not an ambassador...'
         }
@@ -63,6 +68,13 @@ class FishnChips {
         }
         if (new Float64(amount).gt(new Float64('375000'))) {
             throw '375k is the maximum buy in'
+        }
+        if(storage.has(account+'_fish')){
+          let amtfish = storage.get(account+'_fish') // the min. price of fish is always 0.75, any person at least paid 0.75/fish
+          let amtiostpaid = new Float64(amtfish).multi(new Float64('0.75'));
+          if (amtiostpaid.plus(new Float64(amount)).gt(new Float64('375000'))){ //trying to deposit over 375k
+            throw 'sorry max buyin is 375k for ambassador'
+          }
         }
         blockchain.callWithAuth('token.iost', 'transfer', [
             'iost',
@@ -220,12 +232,7 @@ class FishnChips {
      */
     _buyBack(amount) {
         //50% Buyback and Burn + 50% Buyback and Distribute for FISH holders
-        if (!storage.has('profitPerShare_fish')) {
-            storage.put('profitPerShare_fish', '0');
-        }
-        if (!storage.has('fishCurrSupply')) {
-            storage.put('profitPerShare_fish', '0')
-        }
+
         let profitPerShare_fish = storage.get('profitPerShare_fish');
         storage.put('is_selling','true'); //set the selling variable to true.
 
@@ -438,7 +445,7 @@ class FishnChips {
 
     storage.put('is_selling','false'); //set boolean to false until the next call of _buyBack() will set it to true.
 
-      if(account !== "escrow") { //FRY Investment Fund will go in after ambassadors, but before the general public.
+      if(account !== "fishnchips") { //FRY Investment Fund will go in after ambassadors, but before the general public.
 
 
         let public_start_time = Number(1575237600); //december 1st 2:00pm PST
