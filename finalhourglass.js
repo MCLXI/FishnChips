@@ -699,7 +699,7 @@ class FishnChips {
         let result = new Float64(new Float64(-1).multi(new Float64(b)).plus(new Float64(Math.sqrt(new Float64(Math.pow(b, 2)).minus(new Float64(4).multi(new Float64(a).multi(new Float64(c)))))))).div(new Float64(a).multi(new Float64(2)));
         //simple form from vanilla js below
         // let result = (-1 * b + Math.sqrt(Math.pow(b, 2) - (4 * a * c))) / (2 * a);
-        return result + 1; //need to add 1 for correct answer
+        return Number(result) + 1; //need to add 1 for correct answer
     }
     /**
      * Calculate how many CHIPS to send.
