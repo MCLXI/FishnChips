@@ -706,6 +706,9 @@ class FishnChips {
      */
     _calcChipsReceived(iostamount, token_price) {
         let have = iostamount;
+        blockchain.receipt(JSON.stringify({
+          iostamount:iostamount
+        }));
         let inc = new Float64('0.0000001'); //.1 per million
         let price = token_price;
         let a = new Float64(inc).div(new Float64(2));
