@@ -28,8 +28,7 @@ Node Earnings: (Operator and Voting side)<br>
 100% Voter Rewards are reinvested through Buyback<br>
 
 **Fish n' Chips Voting rewards:<br>
-50% Buyback & Burn, hourglass reinvests in itself by buying CHIPS with the voter rewards (also raises the token price every single <br>
-day), then burns the CHIPS it holds.<br>
+50% Buyback & Burn, hourglass reinvests in itself by buying CHIPS with the voter rewards, then burns the CHIPS it holds.<br>
 50% Buyback & Distribute CHIPS to FISH Holders<br>
 
 Order goes:<br>

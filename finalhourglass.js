@@ -130,9 +130,6 @@ class FishnChips {
         }
         storage.put(account + '_fish', new Float64(storage.get(account + '_fish')).plus(new Float64(amount)).toFixed(8).toString())
         //increase the supply
-        if (!storage.has('fishCurrSupply')) {
-            storage.put('fishCurrSupply', '0')
-        }
         storage.put('fishCurrSupply', new Float64(storage.get('fishCurrSupply')).plus(new Float64(amount)).toFixed(8).toString())
     }
     /**
@@ -433,6 +430,9 @@ class FishnChips {
      * Used to buy CHIPS and properly distribute dividends/fees.
      */
     buyin(referral, account, amount) {
+      if(Number(amount) < 1 || isNaN(amount)){
+        throw 'invalid amount';
+      }
       if(!storage.has('is_selling')){
         storage.put('is_selling','false'); //default is false.
       }
