@@ -3,6 +3,19 @@
     "version": "1.0.0",
     "abi": [
         {
+            "name": "reinvest",
+            "args": [
+                "string",
+                "string"
+            ],
+                                                                             "amountLimit": [ {
+  "token": "iost",
+  "val": "unlimited"
+  } ],
+
+            "description": ""
+        },
+        {
             "name": "ambassadorBuyIn",
             "args": [
                 "string",

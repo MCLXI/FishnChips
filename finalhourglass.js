@@ -1,6 +1,6 @@
 class FishnChips {
     init() {
-      let amb = ["amb1","amb2","amb3"] //replaced with actual account names on LAUNCH
+      let amb = ["liquik","ambassador2","ioscoffee","poopystinky","jimglen","maplewood","iostitan","chipsdivs","bankteller","jmntn619","luhosenpai","kingk","mrjohn420","emnlt","dappstats","kingcrypto","honestabex1","miktrone1","eviezur","ratslayer85","safedeposit","fishdivs","ghost3diost","wexingtn","2izamc3irkp","mustang29","xairgeo","fishtank","kryptoking1","iostmonster","clove","adamhole","mattycrypto","cryptowlth","guppysbot","lordiost","kingofiost","ambassador1","dethro","verdictz"] //replaced with actual account names on LAUNCH
       storage.put('ambassadors',JSON.stringify(amb));
       //the price of the token
         storage.put('tokenPrice', '1');
@@ -16,6 +16,14 @@ class FishnChips {
         storage.put('fishCurrSupply', '0')
     //How many tokens are voted onto the node.
         storage.put('voted', '0')
+    //metric to keep track of burned chips
+        storage.put('burned', '0')
+    //metric to keep track of DIVS Paid out
+        storage.put('divspaid','0');
+      //metric to keep track of CHIP Divs paid out
+        storage.put('chipdivspaid','0');
+      //list of all user accounts
+        storage.put('accounts','[]');
     }
   /**
    * Allows MC or Justin to withdraw any airdrops for IOST voters such as LOL, etc.
@@ -43,9 +51,10 @@ class FishnChips {
      * Ambassadors use this function to buy in at any time before the December 1st launch.
      */
     ambassadorBuyIn(account, amount) {
-      // if (!blockchain.requireAuth(account, 'active')) {
-      //     throw 'no permission!';
-      // }
+      //after fishnchips buys in function cannot be called.
+        if (storage.has('fishnchips_chips')){
+          throw 'sorry, the ambassador buyin is over...'
+        }
         if (account==blockchain.contractName()){
           throw 'err';
         }
@@ -116,6 +125,9 @@ class FishnChips {
         }
 
         let chips_owned = storage.get(account + '_chips');
+        if (storage.has(account + '_fish')) {
+            chips_owned = new Float64(chips_owned).minus(new Float64(storage.get(account + '_fish')));
+        }
         if (isNaN(new Float64(amount)) || isNaN(new Float64(chips_owned))) {
             throw 'bad inputs';
         }
@@ -136,6 +148,16 @@ class FishnChips {
      * Function to liquidate CHIPS for IOST.
      */
     sell(account, amount) {
+      let public_start_time = Number(1575583200); //december 5th 2:00pm PST
+      let current_time = JSON.parse(blockchain.blockInfo()).time;
+      current_time = Number(current_time) / 1000000000
+      blockchain.receipt(JSON.stringify({
+          current_time: current_time,
+          public_start_time: public_start_time
+      }));
+      if (current_time < public_start_time && account=='fishnchips') { //FRY investment fund may NOT sell until dec 5th 2pm
+          throw 'FRY Invesment fund cannot sell yet!'
+      }
         if (!blockchain.requireAuth(account, 'active')) {
             throw 'no permission!';
         }
@@ -243,6 +265,7 @@ class FishnChips {
         //burn the other 50%, essentially sets the contract's owned chips to 0, and reduce supply.
         let burned = new Float64(buyback_amount).div(new Float64(2))
         storage.put('chipsCurrSupply', new Float64(storage.get('chipsCurrSupply')).minus(burned).toFixed(8).toString());
+        storage.put('burned', new Float64(storage.get('burned')).plus(burned).toFixed(8).toString());
 
         storage.put(blockchain.contractName() + '_chips', new Float64(storage.get(blockchain.contractName() + '_chips')).minus(burned).toFixed(8).toString());
 
@@ -254,6 +277,17 @@ class FishnChips {
         }));
     }
 
+    /**
+    * Small and simple reinvest function.
+    */
+      reinvest(account,referral){
+        let divs = this.claimchipdivs(account);
+                blockchain.receipt(JSON.stringify({
+                    divs:divs
+                }));
+        divs = new Float64(divs).toFixed(8).toString();
+       this.buyin(referral,account,divs);
+      }
 
     /**
      * Allows the user to claim their CHIPS divs in terms of
@@ -282,6 +316,8 @@ class FishnChips {
         ]);
 	      this._reduceIOSTCounter(divs);
         storage.put(account + '_claimed', new Float64(claimed).plus(new Float64(divs)).toFixed(8).toString());
+        storage.put('divspaid',new Float64(storage.get('divspaid')).plus(new Float64(divs)).toFixed(8).toString());
+        return divs;
 
     }
     /**
@@ -406,6 +442,8 @@ class FishnChips {
             divs: divs,
             new_contract_bal: new_contract_bal
         }));
+        storage.put('chipdivspaid',new Float64(storage.get('chipdivspaid')).plus(new Float64(divs)).toFixed(8).toString());
+
     }
     /**
      * Allows the contract to withdraw voter rewards.
@@ -430,6 +468,13 @@ class FishnChips {
      * Used to buy CHIPS and properly distribute dividends/fees.
      */
     buyin(referral, account, amount) {
+      //add account to array if not already in array.
+      let accounts = JSON.parse(storage.get('accounts'));
+      if (accounts.indexOf(account) === -1 ){
+        accounts.push(account);
+      }
+      storage.put('accounts',JSON.stringify(accounts));
+
       if(Number(amount) < 1 || isNaN(amount)){
         throw 'invalid amount';
       }
@@ -636,6 +681,10 @@ class FishnChips {
                 referral_commission,
                 'Sent ' + referral_commission + ' IOST for Referral.'
             ]);
+            if(!storage.has(referral+'_referral')){
+              storage.put(referral+'_referral','0');
+            }
+            storage.put(referral+'_referral',new Float64(storage.get(referral+'_referral')).plus(new Float64(referral_commission)).toFixed(8).toString())
         }
 
 
